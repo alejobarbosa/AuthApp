@@ -11,7 +11,8 @@ import SwiftUI
 struct AuthAppApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            Text("AuthApp — Day 1 scaffold")
+                .padding()
         }
     }
 }
