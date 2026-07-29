@@ -10,7 +10,7 @@
 
 import Foundation
 
-public extension Data {
+extension Data {
     /// A pretty-printed string representation for debug logging, or `nil` if
     /// `self` isn't valid JSON. Never throws — logging must never be the
     /// reason a request pipeline fails.

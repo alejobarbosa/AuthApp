@@ -7,7 +7,7 @@
 // Supplies the bearer token to APIClient without APIClient knowing where it comes from.
  
 /// Supplies the bearer token for authenticated requests.
-public protocol AuthorizationInterceptor: Sendable {
+protocol AuthorizationInterceptor: Sendable {
     /// The current bearer token, or `nil` if there is no active session.
     func currentToken() async -> String?
 }
@@ -16,9 +16,9 @@ public protocol AuthorizationInterceptor: Sendable {
 /// login call itself, which is unauthenticated — and the default used
 /// wherever an `APIClient` is constructed without an explicit session
 /// dependency (mainly in tests).
-public struct NoAuthorizationInterceptor: AuthorizationInterceptor {
-    public init() {}
-    public func currentToken() async -> String? { nil }
+struct NoAuthorizationInterceptor: AuthorizationInterceptor {
+    init() {}
+    func currentToken() async -> String? { nil }
 }
 
 

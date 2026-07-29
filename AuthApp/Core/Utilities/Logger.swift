@@ -15,7 +15,7 @@ import os
 /// Severity levels this app actually uses. Kept smaller than `OSLogType`'s
 /// full set so call sites don't have to reason about `.fault` vs `.error`
 /// distinctions that don't matter for this project.
-public enum LogLevel: Sendable {
+enum LogLevel: Sendable {
     case debug
     case info
     case error
@@ -35,10 +35,10 @@ public enum LogLevel: Sendable {
 /// DEBUG` gate) and are replaced with a fixed placeholder even in debug
 /// builds — developers can see *that* a sensitive event happened without
 /// ever seeing its contents in a console, screen recording, or crash log.
-public struct Logger: Sendable {
+struct Logger: Sendable {
     private let osLogger: os.Logger
 
-    public init(category: String, subsystem: String = "com.devmds.authapp") {
+    init(category: String, subsystem: String = "com.devmds.authapp") {
         self.osLogger = os.Logger(subsystem: subsystem, category: category)
     }
 
@@ -49,7 +49,7 @@ public struct Logger: Sendable {
     ///     `sensitive: true` instead of trying to redact the string yourself.
     ///   - sensitive: when `true`, `message` is discarded entirely; only the
     ///     fact that a sensitive event occurred is logged (debug builds only).
-    public func log(_ level: LogLevel, _ message: String, sensitive: Bool) {
+    func log(_ level: LogLevel, _ message: String, sensitive: Bool) {
         guard !sensitive else {
             #if DEBUG
             osLogger.log(level: level.osLogType, "[REDACTED] sensitive event occurred")

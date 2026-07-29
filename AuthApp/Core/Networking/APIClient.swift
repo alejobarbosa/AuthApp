@@ -9,7 +9,7 @@ import Foundation
 
 /// Minimal seam over `URLSession` so tests can substitute a stub transport
 /// (`URLProtocolStub`) without mocking URLSession's much larger surface area.
-public protocol URLSessionProtocol: Sendable {
+protocol URLSessionProtocol: Sendable {
     func data(for request: URLRequest) async throws -> (Data, URLResponse)
 }
 
@@ -21,7 +21,7 @@ extension URLSession: URLSessionProtocol {}
 /// bearer token is fetched fresh on every call via `authorizationInterceptor`,
 /// so a single `APIClient` instance is safe to share across concurrent
 /// requests: it never caches a token that could go stale mid-session.
-public final class APIClient: APIClientProtocol {
+final class APIClient: APIClientProtocol {
     private let session: URLSessionProtocol
     private let baseURL: URL
     private let authorizationInterceptor: AuthorizationInterceptor
@@ -39,7 +39,7 @@ public final class APIClient: APIClientProtocol {
     ///   - retryPolicy: retry behavior for transient transport failures.
     ///   - logger: redacted logging; never receives request bodies or
     ///     Authorization header values.
-    public init(
+    init(
         session: URLSessionProtocol = URLSession.shared,
         baseURL: URL,
         authorizationInterceptor: AuthorizationInterceptor = NoAuthorizationInterceptor(),
@@ -53,7 +53,7 @@ public final class APIClient: APIClientProtocol {
         self.logger = logger
     }
 
-    public func send<E: Endpoint, Response: Decodable & Sendable>(
+    func send<E: Endpoint, Response: Decodable & Sendable>(
         _ endpoint: E
     ) async throws -> Response {
         let token = endpoint.requiresAuth ? await authorizationInterceptor.currentToken() : nil

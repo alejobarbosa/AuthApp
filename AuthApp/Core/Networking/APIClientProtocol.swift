@@ -5,7 +5,7 @@
 //  Created by Alejo Barbosa on 28/07/26.
 //
 
-public protocol APIClientProtocol: Sendable {
+protocol APIClientProtocol: Sendable {
     /// Sends `endpoint` and decodes the response body as `Response`.
     ///
     /// Throws `NetworkError` for every failure category (transport, HTTP,

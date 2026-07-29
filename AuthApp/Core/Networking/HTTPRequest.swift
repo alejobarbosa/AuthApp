@@ -8,7 +8,7 @@
 import Foundation
 
 /// Builds `URLRequest` values from an `Endpoint`.
-public enum HTTPRequestBuilder {
+enum HTTPRequestBuilder {
 
     /// - Parameters:
     ///   - endpoint: the operation to perform.
@@ -17,7 +17,7 @@ public enum HTTPRequestBuilder {
     /// - Throws: `NetworkError.invalidURL` if the endpoint's path doesn't
     ///   resolve against `baseURL`; `NetworkError.unauthorized` if the
     ///   endpoint requires auth but no token was supplied.
-    public static func build(
+    static func build(
         endpoint: some Endpoint,
         baseURL: URL,
         bearerToken: String?

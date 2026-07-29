@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum NetworkError: Error, Sendable {
+enum NetworkError: Error, Sendable {
     /// The endpoint's `path` could not be resolved into a valid URL.
     case invalidURL(path: String)
 
@@ -42,7 +42,7 @@ public enum NetworkError: Error, Sendable {
 }
 
 extension NetworkError: Equatable {
-    public static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
+    static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
         switch (lhs, rhs) {
         case let (.invalidURL(l), .invalidURL(r)):
             return l == r

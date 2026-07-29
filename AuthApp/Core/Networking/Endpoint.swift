@@ -8,7 +8,7 @@
 import Foundation
 
 /// Describes a single network operation without performing it.
-public protocol Endpoint: Sendable {
+protocol Endpoint: Sendable {
     /// Path relative to the API's base URL, e.g. "/auth/login".
     var path: String { get }
 
@@ -33,7 +33,7 @@ public protocol Endpoint: Sendable {
 /// Verified against the live Swagger contract: `POST /auth/login` requires no
 /// auth and always has a body; `GET /commissions` and `GET /commissions/{id}`
 /// require auth and have no body. 
-public extension Endpoint {
+extension Endpoint {
     var headers: [String: String] { [:] }
     var body: Data? { nil }
     var requiresAuth: Bool { true }
