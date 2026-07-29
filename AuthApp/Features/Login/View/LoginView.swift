@@ -41,3 +41,65 @@ struct LoginView: View {
         }
     }
 }
+
+
+#if DEBUG
+#Preview("Empty state") {
+    LoginView(viewModel: LoginViewModel(sessionManager: .preview))
+}
+
+#Preview("Validation error") {
+    let viewModel = LoginViewModel(sessionManager: .preview)
+    LoginView(viewModel: viewModel)
+        .task { await viewModel.submit() }
+}
+
+#Preview("Invalid credentials") {
+    let loginResult: @Sendable () async throws(AppError) -> String = { () async throws(AppError) -> String in
+        throw AppError.authentication(.invalidCredentials)
+    }
+    let viewModel = LoginViewModel(sessionManager: .preview(loginResult: loginResult))
+    LoginView(viewModel: viewModel)
+        .task {
+            viewModel.credentials = LoginCredentials(email: "alice@example.com", password: "wrong")
+            await viewModel.submit()
+        }
+}
+
+#Preview("Submitting") {
+    let loginResult: @Sendable () async throws(AppError) -> String = { () async throws(AppError) -> String in
+        try? await Task.sleep(for: .seconds(999))
+        return "unreachable"
+    }
+    let viewModel = LoginViewModel(sessionManager: .preview(loginResult: loginResult))
+    LoginView(viewModel: viewModel)
+        .task {
+            viewModel.credentials = LoginCredentials(email: "alice@example.com", password: "secret")
+            await viewModel.submit()
+        }
+}
+
+private extension SessionManager {
+    static var preview: SessionManager {
+        preview { "preview-token" }
+    }
+
+    static func preview(loginResult: @escaping @Sendable () async throws(AppError) -> String) -> SessionManager {
+        SessionManager(sessionStore: PreviewSessionStore(), authRepository: PreviewAuthRepository(loginResult: loginResult))
+    }
+}
+
+private struct PreviewSessionStore: SessionStore {
+    func save(token: String) throws {}
+    func loadToken() throws -> String? { nil }
+    func clear() throws {}
+}
+
+private struct PreviewAuthRepository: AuthRepositoryProtocol {
+    let loginResult: @Sendable () async throws(AppError) -> String
+
+    func login(email: String, password: String) async throws(AppError) -> String {
+        try await loginResult()
+    }
+}
+#endif
