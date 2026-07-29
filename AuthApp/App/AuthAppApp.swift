@@ -9,10 +9,11 @@ import SwiftUI
 
 @main
 struct AuthAppApp: App {
+    @State private var coordinator = AppCoordinator()
+
     var body: some Scene {
         WindowGroup {
-            Text("AuthApp — Day 1 scaffold")
-                .padding()
+            RootView(coordinator: coordinator)
         }
     }
 }
