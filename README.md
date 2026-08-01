@@ -50,6 +50,7 @@ A few things worth flagging about how this differs from what's documented:
 - **There's no schema for `Commission` at all** in Swagger, only `LoginDto` and `AuthResponseDto`. The shape above came from an actual authenticated call during testing, not the docs. Decoding is written to tolerate that — an unexpected or missing field shouldn't take down the whole list.
 - **The numeric-looking fields are strings**, not numbers (`"buildCost": "45000.00"`). Decoding them as `Double` would throw. They come in as `String` and get converted to `Decimal` further up, with a fallback if that ever fails.
 - **`status` is an open-ended string.** Only `"pending"` has shown up so far, so it's modeled with a fallback case rather than a fixed enum — an unfamiliar value later shouldn't break decoding.
+- **`GET /commissions/{id}` can return 401 even though the docs only list 200/404 for it.** Handled the same way as every other protected endpoint's 401.
 - **There's no logout, register, or refresh endpoint**, even though the API's own description mentions "Register." Logout here just clears the local session (Keychain) — nothing is called on the server.
 
 ## Architecture
@@ -74,6 +75,12 @@ A few pieces worth knowing about in `Core/Networking`:
 - **`RetryPolicy`** only retries actual connectivity failures, never HTTP errors or bad JSON — retrying a 401 wouldn't accomplish anything except delay telling the user it failed.
 - **`Logger`** wraps `os.Logger` and refuses to emit anything marked sensitive outside of a masked placeholder, even in debug. It's the only thing in the app allowed to log at all.
 
+### Session lifecycle and 401s
+
+`SessionManager` is the single source of truth for whether the app shows Login or the commissions list. The one subtlety worth explaining: a 401 means different things depending on where it comes from. `AuthRepository` maps it to "wrong credentials," while `CommissionsRepository` maps the exact same `NetworkError.unauthorized` to "your session is no longer valid" — there's no way for the networking layer itself to know which meaning applies, so each repository decides based on its own context.
+
+When `CommissionsViewModel` sees a session-expired error, it hands off to `SessionManager.handleUnauthorizedResponse()`, which clears the Keychain and routes back to Login with an explanation, rather than leaving the user staring at a blank error. Logout works the same way minus the "why": it clears the stored token and returns to Login directly, after a confirmation dialog.
+
 ## Testing
 
 Uses Swift Testing rather than XCTest — mostly a readability preference, XCTest would've worked fine too. Everything runs against a stubbed `URLProtocol`, never the live API, so the suite is deterministic and doesn't care whether the API happens to be up.
@@ -85,9 +92,15 @@ Covered so far:
 - a malformed body → `NetworkError.decoding`, without crashing
 - a protected call with no token available fails immediately, no network call made
 - the Authorization header is well-formed (no stray quotes — see above)
+- a commission list decodes into domain models, with money fields converted from string to `Decimal`
+- one malformed entry in a commission list is dropped without failing the rest of the list
+- a 401 while fetching commissions maps to session-expired, not invalid credentials
+- session-expired clears the stored token and routes back to Login
+- logout clears the stored token independently of any server response
 
 ## Known limitations
 
 - No documented schema for `Commission`, so decoding is defensive rather than guaranteed to hold up against future changes to the API.
 - No server-side logout, registration, or refresh endpoint exists right now — logout only clears what's stored locally.
 - A stored token means "this device was logged in before," not "this token still works" — validity only gets confirmed the next time a protected call is actually made.
+- No commission detail screen — the list covers what the assessment asks for, and a single-item view didn't seem worth adding without an actual navigation need.
