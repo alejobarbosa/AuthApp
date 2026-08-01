@@ -55,6 +55,20 @@ struct CommissionsRepositoryTests {
         #expect(decoded.commissions.map(\.id) == ["1", "3"])
     }
 
+    @Test("A createdAt with fractional seconds decodes correctly — regression for a real bug")
+    func fractionalSecondsDateDecodesCorrectly() throws {
+        let json = """
+        [
+            {"id":"9ef0dc02-8133-4422-9dbc-bca38b156a79","carModel":"Mustang GT","carBrand":"Ford","buildCost":"45000.00","commissionRate":"3.00","commissionAmount":"1350.00","status":"pending","createdAt":"2026-07-18T19:03:34.935Z"}
+        ]
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder.apiDecoder.decode(CommissionListDTO.self, from: json)
+
+        #expect(decoded.commissions.count == 1)
+        #expect(decoded.commissions.first?.carModel == "Mustang GT")
+    }
+
     @Test("401 maps to sessionExpired, not invalidCredentials")
     func fetchAllUnauthorized() async {
         let mockClient = MockAPIClient()

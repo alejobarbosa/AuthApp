@@ -116,13 +116,27 @@ final class APIClient: APIClientProtocol {
 }
 
 extension JSONDecoder {
-    /// Shared decoder configured for ISO 8601 dates (matches `createdAt` on
-    /// the Commission resource, Day 3) and default key decoding — the API's
-    /// JSON already uses camelCase, so no key-decoding strategy conversion
-    /// is applied.
     static let apiDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let withFractionalSeconds = Date.ISO8601FormatStyle(includingFractionalSeconds: true)
+        let withoutFractionalSeconds = Date.ISO8601FormatStyle(includingFractionalSeconds: false)
+
+        decoder.dateDecodingStrategy = .custom { dateDecoder in
+            let container = try dateDecoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+
+            if let date = try? withFractionalSeconds.parse(dateString) {
+                return date
+            }
+            if let date = try? withoutFractionalSeconds.parse(dateString) {
+                return date
+            }
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Expected an ISO 8601 date string, got \(dateString)"
+            )
+        }
+
         return decoder
     }()
 }
