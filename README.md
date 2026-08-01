@@ -97,6 +97,41 @@ Covered so far:
 - a 401 while fetching commissions maps to session-expired, not invalid credentials
 - session-expired clears the stored token and routes back to Login
 - logout clears the stored token independently of any server response
+- the real Keychain round-trips a token correctly (save/load/clear/overwrite) — this one runs against actual Security framework calls, not a mock
+- `RetryPolicy` retries transport failures only, stops at its max attempt count, and backs off correctly (300ms → 600ms → 1200ms)
+- `LoginCredentials.validate()` catches empty fields, whitespace-only input, and a missing `@`
+- `AppError.mapping()` is covered exhaustively across every `NetworkError` case
+- an unparseable commission amount maps to `nil`, not `0` and not a crash
+
+54 tests total, all passing, all offline.
+
+### Running tests from the command line
+
+```
+xcodebuild test -scheme AuthApp -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+(Cmd+U in Xcode is what I actually used day to day — this is just the equivalent for CI or a reviewer who'd rather not open the IDE.)
+
+## Security
+
+- **Keychain, not UserDefaults**, for the session token. `KeychainSessionStore` is the only thing that touches it, using `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` — restoration works from a background launch, not only while the device is actively unlocked, but the item stays device-only and is never part of an iCloud Keychain sync or restored onto a different device.
+- **The password itself is never persisted anywhere.** Only the access token from `/auth/login` reaches Keychain; the password lives in `LoginCredentials` for the duration of one submit and then is gone.
+- **`Logger` refuses to emit anything marked `sensitive`** outside of a masked placeholder, in debug and release alike — the Authorization header and request/response bodies never get logged in the clear.
+- **Nothing is `public`.** This is a single app target, not a framework — there's no boundary access control needs to protect, so everything defaults to `internal`.
+
+## Tradeoffs
+
+A few deliberate departures from a literal reading of the brief, each made for a specific reason:
+
+- **"Commissions," not "Profile."** The template folder structure names the second feature "Profile," but the actual protected resource this API exposes is `/commissions`. The feature is named for what it does, not for what the template assumed it'd be.
+- **Logout is local-only.** There's no logout endpoint in the API (see "The API contract"), so `SessionManager.logout()` clears the Keychain and resets state without a network call. Adding a real server-side logout later is one more repository method, not a redesign.
+- **`RetryPolicy` retries transport failures only.** Retrying a 401 or a malformed 200 just delays telling the user about a failure that's going to repeat identically — only genuinely transient failures get a second attempt.
+- **No commission detail screen, no `CommissionsCoordinator`, no separate `CommissionMapper` type.** Each would have been code with no caller yet — the list screen alone satisfies the "protected user data" requirement, and a mapping function small enough to live as `Commission.init(dto:)` didn't earn its own type.
+
+## Screenshots
+
+_(Login screen, commissions list, empty state, session-expired banner, logout confirmation — added right before submitting.)_
 
 ## Known limitations
 
