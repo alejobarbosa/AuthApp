@@ -52,6 +52,7 @@ A few things worth flagging about how this differs from what's documented:
 - **`status` is an open-ended string.** Only `"pending"` has shown up so far, so it's modeled with a fallback case rather than a fixed enum — an unfamiliar value later shouldn't break decoding.
 - **`GET /commissions/{id}` can return 401 even though the docs only list 200/404 for it.** Handled the same way as every other protected endpoint's 401.
 - **There's no logout, register, or refresh endpoint**, even though the API's own description mentions "Register." Logout here just clears the local session (Keychain) — nothing is called on the server.
+- **`createdAt` includes fractional seconds** (`"2026-07-18T19:03:34.935Z"`). A plain `.iso8601` date strategy doesn't accept those milliseconds and fails to decode — caught by testing against a real account where every commission has this exact timestamp shape and the list came back empty with no visible error, thanks to the lenient list decoding hiding the failure. The decoder now tries with fractional seconds first, then falls back without.
 
 ## Architecture
 
@@ -131,11 +132,33 @@ A few deliberate departures from a literal reading of the brief, each made for a
 
 ## Screenshots
 
-_(Login screen, commissions list, empty state, session-expired banner, logout confirmation — added right before submitting.)_
+**Login**
+
+![Login screen](Screenshots/login.png)
+
+**Login — validation errors**
+
+![Empty fields](Screenshots/login-emptyFields.png)
+![Invalid email](Screenshots/login-invalidAddress.png)
+
+**Session expired**
+
+![Session expired](Screenshots/login-sessionExpired.png)
+
+**Commissions list**
+
+![Commissions list](Screenshots/commissions-list.png)
+
+**Commissions — empty state**
+
+![Empty state](Screenshots/commissions-empty.png)
+
+**Logout confirmation**
+
+![Logout confirmation](Screenshots/logout-confirmation.png)
 
 ## Known limitations
 
 - No documented schema for `Commission`, so decoding is defensive rather than guaranteed to hold up against future changes to the API.
 - No server-side logout, registration, or refresh endpoint exists right now — logout only clears what's stored locally.
 - A stored token means "this device was logged in before," not "this token still works" — validity only gets confirmed the next time a protected call is actually made.
-- No commission detail screen — the list covers what the assessment asks for, and a single-item view didn't seem worth adding without an actual navigation need.
