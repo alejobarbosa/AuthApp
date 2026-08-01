@@ -10,6 +10,7 @@ import Foundation
 @MainActor
 final class AppDependencies {
     let sessionManager: SessionManager
+    private let apiClient: APIClientProtocol
 
     init() {
         // Hardcoded literal, not runtime input — force-unwrap is safe here.
@@ -20,12 +21,18 @@ final class AppDependencies {
             baseURL: baseURL,
             authorizationInterceptor: SessionAuthorizationInterceptor(sessionStore: sessionStore)
         )
-        let authRepository = AuthRepository(apiClient: apiClient)
+        self.apiClient = apiClient
 
+        let authRepository = AuthRepository(apiClient: apiClient)
         sessionManager = SessionManager(sessionStore: sessionStore, authRepository: authRepository)
     }
 
     func makeLoginViewModel() -> LoginViewModel {
         LoginViewModel(sessionManager: sessionManager)
+    }
+
+    func makeCommissionsViewModel() -> CommissionsViewModel {
+        let repository = CommissionsRepository(apiClient: apiClient)
+        return CommissionsViewModel(repository: repository, sessionManager: sessionManager)
     }
 }

@@ -16,8 +16,7 @@ struct RootView: View {
             case .restoringSession:
                 LoadingOverlay()
             case .authenticated:
-                Text("Signed in — the commissions screen lands next.")
-                    .padding()
+                CommissionsListView(viewModel: coordinator.commissionsViewModel)
             case .loggedOut, .submitting, .recoverableError, .unauthorized:
                 LoginView(viewModel: coordinator.loginViewModel)
             }

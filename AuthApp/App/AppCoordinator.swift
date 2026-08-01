@@ -12,10 +12,12 @@ import Observation
 final class AppCoordinator {
     let dependencies: AppDependencies
     let loginViewModel: LoginViewModel
+    let commissionsViewModel: CommissionsViewModel
 
     init(dependencies: AppDependencies = AppDependencies()) {
         self.dependencies = dependencies
         self.loginViewModel = dependencies.makeLoginViewModel()
+        self.commissionsViewModel = dependencies.makeCommissionsViewModel()
     }
 
     var sessionState: SessionState {
