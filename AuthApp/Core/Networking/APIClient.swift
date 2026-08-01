@@ -115,7 +115,7 @@ final class APIClient: APIClientProtocol {
     }
 }
 
-private extension JSONDecoder {
+extension JSONDecoder {
     /// Shared decoder configured for ISO 8601 dates (matches `createdAt` on
     /// the Commission resource, Day 3) and default key decoding — the API's
     /// JSON already uses camelCase, so no key-decoding strategy conversion

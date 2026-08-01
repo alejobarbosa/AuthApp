@@ -49,7 +49,7 @@ struct CommissionsRepositoryTests {
         ]
         """.data(using: .utf8)!
 
-        let decoded = try JSONDecoder().decode(CommissionListDTO.self, from: json)
+        let decoded = try JSONDecoder.apiDecoder.decode(CommissionListDTO.self, from: json)
 
         #expect(decoded.commissions.count == 2)
         #expect(decoded.commissions.map(\.id) == ["1", "3"])
