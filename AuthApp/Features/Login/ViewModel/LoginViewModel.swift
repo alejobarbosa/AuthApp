@@ -24,10 +24,14 @@ final class LoginViewModel {
     }
 
     var errorMessage: String? {
-        if case .recoverableError(let error) = sessionManager.state {
-            return error.errorDescription
+        switch sessionManager.state {
+        case .recoverableError(let error):
+            error.errorDescription
+        case .unauthorized:
+            AuthenticationError.sessionExpired.errorDescription
+        default:
+            nil
         }
-        return nil
     }
 
     func submit() async {
